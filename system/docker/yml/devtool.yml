@@ -102,6 +102,7 @@ services:
     image: jenkins/jenkins:2.313
     environment:
       JAVA_OPTS: "-Xms4g -Xmx4g -XX:+UseG1GC -Dfile.encoding=UTF-8 -Dhudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION=true"
+      JENKINS_OPTS: "--prefix=/jenkins"
     ports:
       - "38080:8080"
       - "50000:50000"

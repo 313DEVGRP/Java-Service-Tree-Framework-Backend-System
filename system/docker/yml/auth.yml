@@ -52,6 +52,15 @@ services:
       - KEYCLOAK_USER=admin
       - KEYCLOAK_PASSWORD=qwe123
       - JDBC_PARAMS=serverTimezone=UTC&connectTimeout=30000
+      #- KEYCLOAK_FRONTEND_URL=http://www.313.co.kr/auth
+      #- PROXY_ADDRESS_FORWARDING=true
+      #- VIRTUAL_HOST=http://www.a-rms.net
+    extra_hosts:
+      - "313.co.kr:192.168.25.46"
+      - "db.313.co.kr:192.168.25.40"
+      - "nas.313.co.kr:192.168.25.42"
+      - "www.313.co.kr:192.168.25.42"
+      - "ubuntu.313.co.kr:192.168.25.46"
     ports:
       - "8585:8080"
     depends_on:
