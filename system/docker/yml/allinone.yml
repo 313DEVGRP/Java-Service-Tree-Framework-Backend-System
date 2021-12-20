@@ -169,7 +169,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
-      ES_JAVA_OPTS: "-Xms4g -Xmx4g"
+      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
       cluster.name: es-swarm-cluster
       discovery.seed_hosts: "es-master-01,es-master-02,es-master-03"
       node.name: "es-coordinating"
