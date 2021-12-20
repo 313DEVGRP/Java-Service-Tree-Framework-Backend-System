@@ -35,7 +35,7 @@ services:
       - "313.co.kr:192.168.25.46"
       - "db.313.co.kr:192.168.25.40"
       - "nas.313.co.kr:192.168.25.42"
-      - "www.313.co.kr:192.168.25.46"
+      - "www.313.co.kr:192.168.25.42"
       - "ubuntu.313.co.kr:192.168.25.46"
     volumes: &configSpinnakerVolume
       - config-spinnaker-volume:/opt/spinnaker/config
@@ -143,6 +143,16 @@ services:
     depends_on: *spinnaker-depend
     networks: *spinnaker-network
     logging: *spinnaker-logging
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --tries=1 --spider http://127.0.0.1:7003/health || exit 1"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5m
 
   gate:
     image: us-docker.pkg.dev/spinnaker-community/docker/gate:0.10.0-20180221133510
