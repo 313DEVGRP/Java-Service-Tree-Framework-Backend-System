@@ -2,11 +2,34 @@ version: '3.6'
 
 services:
 
-# Docker 사용자 추가
-#sudo groupadd docker
-#sudo usermod -aG docker $USER
+#groupadd -g 999 docker
+  
+#https://github.com/jakubhajek/elasticsearch-docker-swarm/blob/master/stack-elastic.yml
+# elasticsearch coordinating node
+# /etc/security/limits.conf
+# * hard memlock unlimited
+# * soft memlock unlimited
+# * hard nofile 65536
+# * soft nofile 65536
+# * hard nproc 65536
+# * soft nproc 65536
 
-# 도커 설치
+# vim /etc/rc.local
+# echo never > /sys/kernel/mm/transparent_hugepage/enabled
+# exit 0
+
+# /etc/sysctl.conf
+# vm.max_map_count=262144
+# vm.overcommit_memory=1
+# net.core.somaxconn=1024
+
+# nano /etc/rc.local
+# echo never > /sys/kernel/mm/transparent_hugepage/enabled
+# exit 0
+
+# /lib/systemd/system/docker.service
+# LimitMEMLOCK=infinity
+
 #apt update
 #apt install apt-transport-https ca-certificates curl software-properties-common
 #curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -18,42 +41,15 @@ services:
 #apt install docker-ce=18.06.3~ce~3-0~ubuntu
 #apt-get install nfs-common
 
-# 스웜 설정
 #docker swarm join-token worker
 #docker swarm join --token SWMTKN-1-1fd9zytidyai9bfelii0vt5nee6l43ibedvwjztbgncxfil2oi-0ungbwdty6jaihk5g7usk5pv9 192.168.25.46:2377
 
-#https://github.com/jakubhajek/elasticsearch-docker-swarm/blob/master/stack-elastic.yml
-# elasticsearch coordinating node
-# /etc/security/limits.conf
-# * hard memlock unlimited
-# * soft memlock unlimited
-# * hard nofile 65536
-# * soft nofile 65536
-# * hard nproc 65536
-# * soft nproc 65536
-
-# 커널 튜닝
-# vim /etc/rc.local
-# echo never > /sys/kernel/mm/transparent_hugepage/enabled
-# exit 0
-
-# 시스템 튜닝
-# /etc/sysctl.conf
-# vm.max_map_count=262144
-# vm.overcommit_memory=1
-# net.core.somaxconn=1024
-
-# 도커 튜닝
-# /lib/systemd/system/docker.service
-# LimitMEMLOCK=infinity
-
-# 올인원 모니터링 사용자 추가
 #sudo adduser allinone --disabled-password
 #sudo usermod -aG sudo allinone
 
   # elasticsearch master node
   es-master-01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.3}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.2}
     hostname: es-master-01
     volumes:
       #- es-master-01-data:/usr/share/elasticsearch/data
@@ -84,10 +80,12 @@ services:
         target: /etc/security/limits.conf
     networks: &allinone-network
       - allinoneNetwork
-    deploy: &elk-deploy
+    deploy:
       endpoint_mode: dnsrr
       mode: replicated
       replicas: 1
+      placement:
+        constraints: [node.hostname == submaster-node]
     logging: &allinone-logging
       driver: "json-file"
       options:
@@ -96,7 +94,7 @@ services:
 
   # elasticsearch master node
   es-master-02:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.3}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.2}
     hostname: es-master-02
     volumes:
       #- es-master-02-data:/usr/share/elasticsearch/data
@@ -124,11 +122,16 @@ services:
       ES_JAVA_OPTS: "-Xms2g -Xmx2g"
     configs: *es-limits-conf
     networks: *allinone-network
-    deploy: *elk-deploy
+    deploy:
+      endpoint_mode: dnsrr
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.hostname == sub-slave3node]
     logging: *allinone-logging
 
   es-master-03:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.3}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.2}
     hostname: es-master-03
     volumes:
       #- es-master-03-data:/usr/share/elasticsearch/data
@@ -156,11 +159,16 @@ services:
       ES_JAVA_OPTS: "-Xms2g -Xmx2g"
     configs: *es-limits-conf
     networks: *allinone-network
-    deploy: *elk-deploy
+    deploy:
+      endpoint_mode: dnsrr
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.hostname == sub-slave4node]
     logging: *allinone-logging
 
   es-coordinating:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.3}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.2}
     hostname: es-coordinating
     ports:
       - 9200:9200
@@ -208,7 +216,7 @@ services:
     logging: *allinone-logging
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:${ELKVERSION:-7.9.3}
+    image: docker.elastic.co/kibana/kibana:${ELKVERSION:-7.9.2}
     hostname: kibana
     ports:
       - 5601:5601
@@ -223,7 +231,7 @@ services:
     logging: *allinone-logging
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:${ELKVERSION:-7.9.3}
+    image: docker.elastic.co/logstash/logstash:${ELKVERSION:-7.9.2}
     ports:
       - "5000:5000"
       - "9600:9600"
@@ -287,7 +295,7 @@ services:
     ports:
       - "9095:9092"
     volumes:
-      - kafka1-data:/kafka
+      - kafka1-data:/kafka:nocopy
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -313,7 +321,7 @@ services:
     ports:
       - "9096:9092"
     volumes:
-      - kafka2-data:/kafka
+      - kafka2-data:/kafka:nocopy
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -339,7 +347,7 @@ services:
     ports:
       - "9097:9092"
     volumes:
-      - kafka3-data:/kafka
+      - kafka3-data:/kafka:nocopy
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -379,7 +387,7 @@ services:
     logging: *allinone-logging
 
   apm-server:
-    image: docker.elastic.co/apm/apm-server:${ELKVERSION:-7.9.3}
+    image: docker.elastic.co/apm/apm-server:${ELKVERSION:-7.9.2}
     ports:
       - "8200:8200"
     depends_on:
@@ -402,7 +410,7 @@ services:
       - source: influxdb.conf
         target: /etc/influxdb/influxdb.conf
     volumes:
-      - influxdb-data:/var/lib/influxdb
+      - influxdb-data:/var/lib/influxdb:nocopy
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     deploy: *allinone-deploy
@@ -414,7 +422,7 @@ services:
     ports:
       - 8888:8888
     volumes:
-      - chronograf:/var/lib/chronograf
+      - chronograf:/var/lib/chronograf:nocopy
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     depends_on:
@@ -436,8 +444,8 @@ services:
     depends_on:
       - chronograf
     volumes:
-      - grafanavar:/var/lib/grafana
-      - grafanaetc:/etc/grafana
+      - grafanavar:/var/lib/grafana:nocopy
+      - grafanaetc:/etc/grafana:nocopy
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     deploy: *allinone-deploy
@@ -456,11 +464,11 @@ services:
       - MGR_PURGE_COUNTER_KEEP_DAYS=15
       - JAVA_OPT=-Xms1024m -Xmx1024m
     volumes:
-      - sc-logs:/home/scouter-server/logs
-      - sc-data:/home/scouter-server/database
-      - sc-libs:/home/scouter-server/lib
-      - sc-conf:/home/scouter-server/conf
-      - sc-extweb:/home/scouter-server/extweb
+      - sc-logs:/home/scouter-server/logs:nocopy
+      - sc-data:/home/scouter-server/database:nocopy
+      - sc-libs:/home/scouter-server/lib:nocopy
+      - sc-conf:/home/scouter-server/conf:nocopy
+      - sc-extweb:/home/scouter-server/extweb:nocopy
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     depends_on:
@@ -474,7 +482,7 @@ services:
     logging: *allinone-logging
 
   fluentd:
-    image: 313devgrp/fluentd:v1.14.0-debian-1.0-v4
+    image: 313devgrp/fluentd-elastic-kafka:v1.9.1-debian-1.0.1
     ports:
       - 24224:24224
       - 24224:24224/udp
