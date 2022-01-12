@@ -401,7 +401,7 @@ output.elasticsearch:
   enabled: true
 
   # Set gzip compression level.
-  compression_level: 0
+  #compression_level: 0
 
   # Optional protocol and basic auth credentials.
   #protocol: "https"

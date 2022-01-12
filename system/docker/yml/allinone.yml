@@ -47,59 +47,56 @@ services:
 #sudo adduser allinone --disabled-password
 #sudo usermod -aG sudo allinone
 
-  # elasticsearch master node
   es-master-01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.2}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.3}
     hostname: es-master-01
     volumes:
-      #- es-master-01-data:/usr/share/elasticsearch/data
       - type: volume
-        source: es-master-01-data
+        source: es-master-01
         target: /usr/share/elasticsearch/data
         volume:
           nocopy: true
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    environment: &es-master-env
+    environment:
       cluster.name: es-swarm-cluster
       node.name: "es-master-01"
       discovery.seed_hosts: "es-master-01,es-master-02,es-master-03"
       cluster.initial_master_nodes: "es-master-01,es-master-02,es-master-03"
       node.master: "true"
       node.voting_only: "false"
-      node.data: "true"
+      node.data: "false"
       node.ingest: "false"
       node.ml: "false"
-      xpack.ml.enabled: "true"
+      xpack.ml.enabled: "false"
       cluster.remote.connect: "false"
       MAX_LOCKED_MEMORY: unlimited
       bootstrap.memory_lock: "true"
-      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+    depends_on:
+      - es-data-01
+      - es-data-02
     configs: &es-limits-conf
       - source: es-limits.conf
         target: /etc/security/limits.conf
     networks: &allinone-network
       - allinoneNetwork
-    deploy:
+    deploy: &allinone-master-deploy
       endpoint_mode: dnsrr
       mode: replicated
       replicas: 1
-      placement:
-        constraints: [node.hostname == submaster-node]
     logging: &allinone-logging
       driver: "json-file"
       options:
         max-file: "5"
         max-size: "100m"
 
-  # elasticsearch master node
   es-master-02:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.2}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.3}
     hostname: es-master-02
     volumes:
-      #- es-master-02-data:/usr/share/elasticsearch/data
       - type: volume
-        source: es-master-02-data
+        source: es-master-02
         target: /usr/share/elasticsearch/data
         volume:
           nocopy: true
@@ -112,63 +109,150 @@ services:
       cluster.initial_master_nodes: "es-master-01,es-master-02,es-master-03"
       node.master: "true"
       node.voting_only: "false"
-      node.data: "true"
+      node.data: "false"
       node.ingest: "false"
       node.ml: "false"
-      xpack.ml.enabled: "true"
+      xpack.ml.enabled: "false"
       cluster.remote.connect: "false"
       MAX_LOCKED_MEMORY: unlimited
       bootstrap.memory_lock: "true"
-      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+    depends_on:
+      - es-data-01
+      - es-data-02
     configs: *es-limits-conf
     networks: *allinone-network
-    deploy:
-      endpoint_mode: dnsrr
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints: [node.hostname == sub-slave3node]
+    deploy: *allinone-master-deploy
     logging: *allinone-logging
 
   es-master-03:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.2}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.3}
     hostname: es-master-03
     volumes:
-      #- es-master-03-data:/usr/share/elasticsearch/data
       - type: volume
-        source: es-master-03-data
+        source: es-master-03
         target: /usr/share/elasticsearch/data
         volume:
           nocopy: true
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    environment: &es-master-env
+    environment:
       cluster.name: es-swarm-cluster
       node.name: "es-master-03"
       discovery.seed_hosts: "es-master-01,es-master-02,es-master-03"
       cluster.initial_master_nodes: "es-master-01,es-master-02,es-master-03"
       node.master: "true"
       node.voting_only: "false"
-      node.data: "true"
+      node.data: "false"
       node.ingest: "false"
       node.ml: "false"
-      xpack.ml.enabled: "true"
+      xpack.ml.enabled: "false"
       cluster.remote.connect: "false"
       MAX_LOCKED_MEMORY: unlimited
       bootstrap.memory_lock: "true"
-      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+    depends_on:
+      - es-data-01
+      - es-data-02
     configs: *es-limits-conf
     networks: *allinone-network
-    deploy:
-      endpoint_mode: dnsrr
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints: [node.hostname == sub-slave4node]
+    deploy: *allinone-master-deploy
+    logging: *allinone-logging
+
+  es-data-01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.3}
+    hostname: es-data-01
+    volumes:
+      - type: volume
+        source: es-data-01
+        target: /usr/share/elasticsearch/data
+        volume:
+          nocopy: true
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      cluster.name: es-swarm-cluster
+      node.name: "es-data-01"
+      discovery.seed_hosts: "es-master-01,es-master-02,es-master-03"
+      cluster.initial_master_nodes: "es-master-01,es-master-02,es-master-03"
+      node.master: "false"
+      node.voting_only: "false"
+      node.data: "true"
+      node.ingest: "false"
+      node.ml: "false"
+      xpack.ml.enabled: "false"
+      cluster.remote.connect: "false"
+      MAX_LOCKED_MEMORY: unlimited
+      bootstrap.memory_lock: "true"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+    configs: *es-limits-conf
+    networks: *allinone-network
+    deploy: *allinone-master-deploy
+    logging: *allinone-logging
+
+  es-data-02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.3}
+    hostname: es-data-02
+    volumes:
+      - type: volume
+        source: es-data-02
+        target: /usr/share/elasticsearch/data
+        volume:
+          nocopy: true
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      cluster.name: es-swarm-cluster
+      node.name: "es-data-02"
+      discovery.seed_hosts: "es-master-01,es-master-02,es-master-03"
+      cluster.initial_master_nodes: "es-master-01,es-master-02,es-master-03"
+      node.master: "false"
+      node.voting_only: "false"
+      node.data: "true"
+      node.ingest: "false"
+      node.ml: "false"
+      xpack.ml.enabled: "false"
+      cluster.remote.connect: "false"
+      MAX_LOCKED_MEMORY: unlimited
+      bootstrap.memory_lock: "true"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+    configs: *es-limits-conf
+    networks: *allinone-network
+    deploy: *allinone-master-deploy
+    logging: *allinone-logging
+
+  es-ingest:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.3}
+    hostname: es-ingest
+    volumes: &allinone-volume
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+      cluster.name: es-swarm-cluster
+      discovery.seed_hosts: "es-master-01,es-master-02,es-master-03"
+      cluster.initial_master_nodes: "es-master-01,es-master-02,es-master-03"
+      node.name: "es-ingest"
+      node.master: "false"
+      node.voting_only: "false"
+      node.data: "false"
+      node.ingest: "true"
+      node.ml: "false"
+      cluster.remote.connect: "false"
+      MAX_LOCKED_MEMORY: unlimited
+      bootstrap.memory_lock: "true"
+      xpack.monitoring.collection.enabled: "false"
+    depends_on:
+      - es-master-01
+      - es-master-02
+      - es-master-03
+    configs: *es-limits-conf
+    networks: *allinone-network
+    deploy: *allinone-master-deploy
     logging: *allinone-logging
 
   es-coordinating:
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.2}
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELKVERSION:-7.9.3}
     hostname: es-coordinating
     ports:
       - 9200:9200
@@ -177,9 +261,10 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
-      ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
       cluster.name: es-swarm-cluster
       discovery.seed_hosts: "es-master-01,es-master-02,es-master-03"
+      cluster.initial_master_nodes: "es-master-01,es-master-02,es-master-03"
       node.name: "es-coordinating"
       node.master: "false"
       node.voting_only: "false"
@@ -189,7 +274,6 @@ services:
       cluster.remote.connect: "false"
       MAX_LOCKED_MEMORY: unlimited
       bootstrap.memory_lock: "true"
-      xpack.monitoring.collection.enabled: "false"
     depends_on:
       - es-master-01
       - es-master-02
@@ -216,7 +300,7 @@ services:
     logging: *allinone-logging
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:${ELKVERSION:-7.9.2}
+    image: docker.elastic.co/kibana/kibana:${ELKVERSION:-7.9.3}
     hostname: kibana
     ports:
       - 5601:5601
@@ -231,7 +315,7 @@ services:
     logging: *allinone-logging
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:${ELKVERSION:-7.9.2}
+    image: docker.elastic.co/logstash/logstash:${ELKVERSION:-7.9.3}
     ports:
       - "5000:5000"
       - "9600:9600"
@@ -242,7 +326,7 @@ services:
       - source: logstash_pipeline
         target: /usr/share/logstash/pipeline/logstash.conf
     environment:
-      - "LS_JAVA_OPTS=-Xmx2g -Xms2g"
+      - "LS_JAVA_OPTS=-Xmx1g -Xms1g"
     depends_on:
       - kibana
     volumes: *allinone-volume
@@ -250,144 +334,8 @@ services:
     deploy: *allinone-deploy
     logging: *allinone-logging
 
-  #https://gist.github.com/dkurzaj/2a899de8cb5ae698919f0a9bbf7685f0
-  zookeeper1:
-    image: wurstmeister/zookeeper:3.4.6
-    ports:
-      - "2181:2181"
-    environment:
-      - ZOO_SERVER_ID=1
-      - ALLOW_ANONYMOUS_LOGIN=yes
-      - ZOO_SERVERS=zookeeper1:2888:3888,zookeeper2:2888:3888,zookeeper3:2888:3888
-    volumes: *allinone-volume
-    deploy: *allinone-deploy
-    networks: *allinone-network
-    logging: *allinone-logging
-
-  zookeeper2:
-    image: wurstmeister/zookeeper:3.4.6
-    ports:
-      - "2182:2181"
-    environment:
-      - ZOO_SERVER_ID=2
-      - ALLOW_ANONYMOUS_LOGIN=yes
-      - ZOO_SERVERS=zookeeper1:2888:3888,zookeeper2:2888:3888,zookeeper3:2888:3888
-    volumes: *allinone-volume
-    deploy: *allinone-deploy
-    networks: *allinone-network
-    logging: *allinone-logging
-
-  zookeeper3:
-    image: wurstmeister/zookeeper:3.4.6
-    ports:
-      - "2183:2181"
-    environment:
-      - ZOO_SERVER_ID=3
-      - ALLOW_ANONYMOUS_LOGIN=yes
-      - ZOO_SERVERS=zookeeper1:2888:3888,zookeeper2:2888:3888,zookeeper3:2888:3888
-    volumes: *allinone-volume
-    deploy: *allinone-deploy
-    networks: *allinone-network
-    logging: *allinone-logging
-
-  kafka1:
-    image: wurstmeister/kafka:2.12-2.3.0
-    ports:
-      - "9095:9092"
-    volumes:
-      - kafka1-data:/kafka:nocopy
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2182,zookeeper3:2183
-      JMX_PORT: 9093
-      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka1 -Dcom.sun.management.jmxremote.rmi.port=9093
-      KAFKA_ADVERTISED_HOST_NAME: kafka1
-      KAFKA_ADVERTISED_PORT: 9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
-    depends_on:
-      - zookeeper1
-      - zookeeper2
-      - zookeeper3
-    deploy: *allinone-deploy
-    networks: *allinone-network
-    logging: *allinone-logging
-
-  kafka2:
-    image: wurstmeister/kafka:2.12-2.3.0
-    ports:
-      - "9096:9092"
-    volumes:
-      - kafka2-data:/kafka:nocopy
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2182,zookeeper3:2183
-      JMX_PORT: 9093
-      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka2 -Dcom.sun.management.jmxremote.rmi.port=9093
-      KAFKA_ADVERTISED_HOST_NAME: kafka2
-      KAFKA_ADVERTISED_PORT: 9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
-    depends_on:
-      - zookeeper1
-      - zookeeper2
-      - zookeeper3
-    deploy: *allinone-deploy
-    networks: *allinone-network
-    logging: *allinone-logging
-
-  kafka3:
-    image: wurstmeister/kafka:2.12-2.3.0
-    ports:
-      - "9097:9092"
-    volumes:
-      - kafka3-data:/kafka:nocopy
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181,zookeeper2:2182,zookeeper3:2183
-      JMX_PORT: 9093
-      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka3 -Dcom.sun.management.jmxremote.rmi.port=9093
-      KAFKA_ADVERTISED_HOST_NAME: kafka3
-      KAFKA_ADVERTISED_PORT: 9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka3:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
-    depends_on:
-      - zookeeper1
-      - zookeeper2
-      - zookeeper3
-    deploy: *allinone-deploy
-    networks: *allinone-network
-    logging: *allinone-logging
-
-  # https://github.com/hleb-albau/kafka-manager-docker
-  kafka-manager:
-    image: hlebalbau/kafka-manager:2.0.0.2
-    depends_on:
-      - kafka1
-      - kafka2
-      - kafka3
-    environment:
-      ZK_HOSTS: zookeeper1:2181,zookeeper2:2182,zookeeper3:2183
-      APPLICATION_SECRET: "random-secret"
-      KM_ARGS: -Djava.net.preferIPv4Stack=true
-    ports:
-      - "8282:9000"
-    volumes: *allinone-volume
-    deploy: *allinone-deploy
-    networks: *allinone-network
-    logging: *allinone-logging
-
   apm-server:
-    image: docker.elastic.co/apm/apm-server:${ELKVERSION:-7.9.2}
+    image: docker.elastic.co/apm/apm-server:${ELKVERSION:-7.9.3}
     ports:
       - "8200:8200"
     depends_on:
@@ -396,39 +344,6 @@ services:
       - source: apmserver.conf
         target: /usr/share/apm-server/apm-server.yml
     volumes: *allinone-volume
-    deploy: *allinone-deploy
-    networks: *allinone-network
-    logging: *allinone-logging
-
-  influxdb:
-    image: influxdb:1.7.10
-    ports:
-      - 18086:8086
-      - 18083:8083
-      - 18089:8089/udp
-    configs:
-      - source: influxdb.conf
-        target: /etc/influxdb/influxdb.conf
-    volumes:
-      - influxdb-data:/var/lib/influxdb:nocopy
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    deploy: *allinone-deploy
-    networks: *allinone-network
-    logging: *allinone-logging
-
-  chronograf:
-    image: chronograf:1.7.17
-    ports:
-      - 8888:8888
-    volumes:
-      - chronograf:/var/lib/chronograf:nocopy
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    depends_on:
-      - influxdb
-    environment:
-      INFLUXDB_URL: http://influxdb:8086
     deploy: *allinone-deploy
     networks: *allinone-network
     logging: *allinone-logging
@@ -448,35 +363,6 @@ services:
       - grafanaetc:/etc/grafana:nocopy
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    deploy: *allinone-deploy
-    networks: *allinone-network
-    logging: *allinone-logging
-
-  scouter:
-    image : scouterapm/scouter-server:2.7.0
-    environment:
-      - SC_SERVER_ID=SCCOUTER-COLLECTOR 
-      - NET_HTTP_SERVER_ENABLED=true
-      - NET_HTTP_API_SWAGGER_ENABLED=true
-      - NET_HTTP_API_ENABLED=true
-      - MGR_PURGE_PROFILE_KEEP_DAYS=2
-      - MGR_PURGE_XLOG_KEEP_DAYS=5
-      - MGR_PURGE_COUNTER_KEEP_DAYS=15
-      - JAVA_OPT=-Xms1024m -Xmx1024m
-    volumes:
-      - sc-logs:/home/scouter-server/logs:nocopy
-      - sc-data:/home/scouter-server/database:nocopy
-      - sc-libs:/home/scouter-server/lib:nocopy
-      - sc-conf:/home/scouter-server/conf:nocopy
-      - sc-extweb:/home/scouter-server/extweb:nocopy
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    depends_on:
-      - influxdb
-    ports:
-      - 6180:6180
-      - 6100:6100
-      - 6100:6100/udp
     deploy: *allinone-deploy
     networks: *allinone-network
     logging: *allinone-logging
@@ -505,8 +391,6 @@ configs:
     file: ./allinone/fluent.conf
   apmserver.conf:
     file: ./allinone/apm-server.yml
-  influxdb.conf:
-    file: ./allinone/influxdb.conf
   es-limits.conf:
     file: ./allinone/es-limits.conf
   logstash_config:
@@ -515,33 +399,6 @@ configs:
     file: ./allinone/logstash.conf
 
 volumes:
-  kafka3-data:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/allinone/kafka3"
-
-  kafka2-data:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/allinone/kafka2"
-
-  kafka1-data:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/allinone/kafka1"
-
-  chronograf:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/allinone/chronograf"
 
   grafanavar:
     driver: local
@@ -557,68 +414,40 @@ volumes:
       o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
       device: ":${NFSPATH:-/nfspath}/allinone/grafana/etc"
 
-  sc-extweb:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/allinone/scouter/extweb"
-
-  sc-conf:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/allinone/scouter/conf"
-
-  sc-libs:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/allinone/scouter/libs"
-
-  sc-data:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/allinone/scouter/data"
-
-  sc-logs:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/allinone/scouter/logs"
-
-  influxdb-data:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/allinone/influxdb"
-
-  es-master-01-data:
+  es-master-01:
     driver: local
     driver_opts:
       type: "nfs"
       o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
       device: ":${NFSPATH:-/nfspath}/allinone/es-master-01"
 
-  es-master-02-data:
+  es-master-02:
     driver: local
     driver_opts:
       type: "nfs"
       o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
       device: ":${NFSPATH:-/nfspath}/allinone/es-master-02"
 
-  es-master-03-data:
+  es-master-03:
     driver: local
     driver_opts:
       type: "nfs"
       o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
       device: ":${NFSPATH:-/nfspath}/allinone/es-master-03"
+
+  es-data-01:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
+      device: ":${NFSPATH:-/nfspath}/allinone/es-data-01"
+
+  es-data-02:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
+      device: ":${NFSPATH:-/nfspath}/allinone/es-data-02"
 
 networks:
   allinoneNetwork:

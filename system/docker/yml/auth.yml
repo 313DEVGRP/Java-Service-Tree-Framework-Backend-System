@@ -2,40 +2,6 @@ version: '3.6'
 
 services:
 
-  crowd:
-    image: atlassian/crowd:4.2.3
-    ports:
-      - "8095:8095"
-    environment:
-      - JVM_MINIMUM_MEMORY=1g
-      - JVM_MAXIMUM_MEMORY=1g
-      #- ATL_PROXY_NAME=www.313.co.kr
-      #- ATL_PROXY_PORT=8094
-      #- ATL_TOMCAT_SCHEME=http
-    extra_hosts:
-      - "313.co.kr:192.168.25.46"
-      - "db.313.co.kr:192.168.25.40"
-      - "nas.313.co.kr:192.168.25.42"
-      - "www.313.co.kr:192.168.25.42"
-      - "ubuntu.313.co.kr:192.168.25.46"
-    volumes:
-      - crowdApp:/var/atlassian/application-data/crowd:nocopy
-      - crowdLib:/opt/atlassian/crowd/apache-tomcat/lib:nocopy
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-    depends_on:
-      - mysql
-    deploy: &auth-deploy
-      mode: replicated
-      replicas: 1
-    networks: &auth-network
-      - authnetwork
-    logging: &auth-logging
-      driver: "json-file"
-      options:
-        max-file: "5"
-        max-size: "100m"
-
 # create database keycloakdb character set utf8 collate utf8_bin;
 # GRANT ALL PRIVILEGES ON keycloakdb.* TO 'mysqluser'@'%';
 # create database crowddb character set utf8 collate utf8_bin;
@@ -65,15 +31,21 @@ services:
       - "8585:8080"
     depends_on:
       - mysql
-      - crowd
     volumes:
       - keycloak:/opt/jboss/keycloak/standalone/deployments:nocopy
       - keycloakThemes:/opt/jboss/keycloak/themes:nocopy
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-    deploy: *auth-deploy
-    networks: *auth-network
-    logging: *auth-logging
+    deploy: &auth-deploy
+      mode: replicated
+      replicas: 1
+    networks: &auth-network
+      - authnetwork
+    logging: &auth-logging
+      driver: "json-file"
+      options:
+        max-file: "5"
+        max-size: "100m"
 
   mysql:
     image: mysql:5.7.34
@@ -176,20 +148,6 @@ services:
     logging: *auth-logging
 
 volumes:
-
-  crowdApp:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/auth/crowdApp"
-
-  crowdLib:
-    driver: local
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFSSERVER:-1.2.3.4},nolock,soft,rw,sync"
-      device: ":${NFSPATH:-/nfspath}/auth/crowdLib"
 
   keycloak:
     driver: local
