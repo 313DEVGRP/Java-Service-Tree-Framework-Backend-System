@@ -41,7 +41,7 @@ dockerRegistry:
     sortTagsByDate: false
     trackDigests: false
     insecureRegistry: true
-    repositories: []
+    repositories: [313devgrp/java-service-tree-framework-backend-server,313devgrp/java-service-tree-framework-middle-proxy]
   primaryAccount: spinnaker-docker-registry
 google:
   enabled: false

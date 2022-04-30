@@ -23,7 +23,7 @@ services:
     scheme: http
     env: {}
     artifactId: spinnaker-deck=2.1.0-20180221143146
-    overrideBaseUrl: http://www.313.co.kr:9000
+    overrideBaseUrl: http://192.168.25.46:9000
     kubernetes:
       imagePullSecrets: []
     enabled: true
@@ -32,7 +32,7 @@ services:
     safeToUpdate: true
     targetSize: 1
     skipLifeCycleManagement: false
-    baseUrl: http://www.313.co.kr:9000
+    baseUrl: http://192.168.25.46:9000
   echo:
     port: 8089
     address: localhost
@@ -91,7 +91,7 @@ services:
     scheme: http
     env: {}
     artifactId: spinnaker-gate=0.10.0-20180221133510
-    overrideBaseUrl: http://www.313.co.kr:8084
+    overrideBaseUrl: http://192.168.25.46:8084
     kubernetes:
       imagePullSecrets: []
     enabled: true
@@ -100,7 +100,7 @@ services:
     safeToUpdate: true
     targetSize: 1
     skipLifeCycleManagement: false
-    baseUrl: http://www.313.co.kr:8084
+    baseUrl: http://192.168.25.46:8084
   igor:
     port: 8088
     address: localhost

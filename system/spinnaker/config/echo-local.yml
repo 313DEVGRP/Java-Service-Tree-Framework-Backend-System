@@ -21,4 +21,4 @@ spring:
     charset: UTF-8
 
 global.spinnaker.timezone: Asia/Seoul
-spinnaker.baseUrl: http:/www.313.co.kr:9000
+spinnaker.baseUrl: http://192.168.25.46:9000

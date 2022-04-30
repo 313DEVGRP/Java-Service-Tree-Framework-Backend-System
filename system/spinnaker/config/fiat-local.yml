@@ -1,7 +1,12 @@
+services:
+  fiat:
+    enabled: true
+
 auth:
   enabled: true
   groupMembership:
     service: EXTERNAL
+    
 
 server:
   address: 0.0.0.0
@@ -9,7 +14,7 @@ server:
 fiat:
   admin:
     roles:
-      - admin
+      - ROLE_ADMIN
   getAllEnabled: true
   writeMode:
     enabled: true
