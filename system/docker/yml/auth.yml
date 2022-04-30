@@ -18,7 +18,7 @@ services:
       - KEYCLOAK_USER=admin
       - KEYCLOAK_PASSWORD=qwe123
       - JDBC_PARAMS=serverTimezone=UTC&connectTimeout=30000
-      #- KEYCLOAK_FRONTEND_URL=http://www.313.co.kr/auth
+      #- KEYCLOAK_FRONTEND_URL=https://192.168.25.46:7777/auth
       #- PROXY_ADDRESS_FORWARDING=true
       #- VIRTUAL_HOST=http://www.a-rms.net
     extra_hosts:
