@@ -1,0 +1,46 @@
+#parse("/include/java_header.vm")
+
+package ${target.javaPackageFromFolder(${SRC})};
+
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Comparator;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import egovframework.com.ext.jstree.springHibernate.core.controller.SHVAbstractController;
+
+#set( $entityLowerCase = $fn.toLowerCase( $entity.name ) )
+#foreach( $field in $entity.nonKeyAttributes ) 
+#set( $entity0toLowerCase = ${field.name} )
+import ${ROOT_PKG}.arms.module_${entityLowerCase}.model.${entity.name}DTO;
+import ${ROOT_PKG}.arms.module_${entityLowerCase}.model.${entity.name}VO;
+#end
+
+@Slf4j
+@Controller
+@RequestMapping(value = {"/auth-anon/api/arms/${entityLowerCase}"})
+public class Anon${entity.name}Controller extends SHVAbstractController<${entity.name}, ${entity.name}DTO> {
+
+    @Autowired
+    @Qualifier("${entity0toLowerCase}")
+    private ${entity.name} ${entity0toLowerCase};
+
+    @PostConstruct
+    public void initialize() {
+        setJsTreeHibernateService(${entity0toLowerCase});
+    }
+
+}

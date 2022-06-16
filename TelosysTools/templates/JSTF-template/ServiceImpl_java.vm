@@ -1,0 +1,16 @@
+#parse("/include/java_header.vm")
+
+package ${target.javaPackageFromFolder(${SRC})};
+
+import egovframework.com.ext.jstree.springHibernate.core.service.JsTreeHibernateServiceImpl;
+import org.springframework.stereotype.Service;
+
+#foreach( $field in $entity.nonKeyAttributes ) 
+#set( $entity0toLowerCase = ${field.name} )
+@Service("$entity0toLowerCase")
+#end
+public class ${entity.name}Impl extends JsTreeHibernateServiceImpl implements ${entity.name}{
+
+
+
+}

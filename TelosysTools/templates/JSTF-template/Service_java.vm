@@ -1,0 +1,11 @@
+#parse("/include/java_header.vm")
+
+package ${target.javaPackageFromFolder(${SRC})};
+
+import egovframework.com.ext.jstree.springHibernate.core.service.JsTreeHibernateService;
+
+public interface ${entity.name} extends JsTreeHibernateService {
+
+
+
+}

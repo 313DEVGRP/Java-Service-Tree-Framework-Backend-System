@@ -1,0 +1,66 @@
+#parse("/include/java_header.vm")
+
+package ${target.javaPackageFromFolder(${SRC})};
+
+import org.hibernate.annotations.*;
+import org.hibernate.annotations.Cache;
+import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import java.io.Serializable;
+import egovframework.com.ext.jstree.springHibernate.core.vo.JsTreeHibernateDTO;
+import egovframework.com.ext.jstree.springHibernate.core.vo.JsTreeHibernateSearchDTO;
+
+#set( $entityUpperCase = $fn.toUpperCase( $entity.name ) )
+#set( $entityLowerCase = $fn.toLowerCase( $entity.name ) )
+@Entity
+@Table(name = "T_ARMS_$entityUpperCase")
+@SelectBeforeUpdate(value=true)
+@DynamicInsert(value=true)
+@DynamicUpdate(value=true)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@SequenceGenerator(name = "${entity.name}Sequence", sequenceName = "S_ARMS_$entityUpperCase", allocationSize = 1)
+public class ${entity.name}VO extends JsTreeHibernateSearchDTO implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+    public ${entity.name}VO() {
+        super();
+    }
+
+    public ${entity.name}VO(Boolean copyBooleanValue) {
+        super();
+        this.copyBooleanValue = copyBooleanValue;
+    }
+
+    //@Getter @Setter
+
+    /*
+     * Extend Bean Field
+     */
+    private Boolean copyBooleanValue;
+
+    @Transient
+    public Boolean getCopyBooleanValue() {
+        copyBooleanValue = false;
+        if (this.getCopy() == 0) {
+            copyBooleanValue = false;
+        } else {
+            copyBooleanValue = true;
+        }
+        return copyBooleanValue;
+    }
+
+    public void setCopyBooleanValue(Boolean copyBooleanValue) {
+        this.copyBooleanValue = copyBooleanValue;
+    }
+
+    @Override
+    public <T extends JsTreeHibernateSearchDTO> void setFieldFromNewInstance(T paramInstance) {
+        if( paramInstance instanceof JsTreeHibernateDTO){
+            if(paramInstance.isCopied()) {
+                this.setC_title("copy_" + this.getC_title());
+            }
+        }
+    }
+}
